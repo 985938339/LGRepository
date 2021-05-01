@@ -1,0 +1,11 @@
+#nacos的配置必须放在在bootstrap.yml里
+spring:
+  application:
+    name: lgmall-admin
+
+  cloud:
+    nacos:
+      config:
+        server-addr: 192.168.56.10:8848
+
+

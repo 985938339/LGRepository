@@ -1,0 +1,56 @@
+server:
+  port: 9200
+
+spring:
+  application:
+    name: lgmall-gateway
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.56.10:8848
+
+    sentinel:
+      transport:
+        #配置sentinel dashboard地址
+        dashboard: 192.168.56.10:8858
+
+    gateway:
+      routes:
+
+          #所以访问 lgmall.com的时候，就会路由到产品服务去
+        - id: lgmall_host_route
+          uri: lb://lgmall-product
+          predicates:
+            - Host=lgmall.com
+
+        - id: lgmall_product_route
+          uri: lb://lgmall-product
+          predicates:
+            - Host=product.lgmall.com
+
+        - id: lgmall_admin_route
+          uri: lb://lgmall-admin
+          predicates:
+            - Host=admin.lgmall.com
+
+        - id: lgmall_cart_route
+          uri: lb://lgmall-cart
+          predicates:
+            - Host=cart.lgmall.com
+
+        - id: lgmall_order_route
+          uri: lb://lgmall-order
+          predicates:
+            - Host=order.lgmall.com
+
+
+
+
+
+#暴露所有端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'

@@ -1,0 +1,38 @@
+server:
+  port: 9100
+
+spring:
+  application:
+    name: lgmall-cart
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.56.10:8848
+
+    sentinel:
+      transport:
+        #配置sentinel dashboard地址
+        dashboard: 192.168.56.10:8858
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.56.10:3306/lgmall_cms?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+
+  redis:
+    host: 192.168.56.10
+
+#开启feign对sentinel的支持
+feign:
+  sentinel:
+    enabled: true
+
+
+#暴露所有端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
