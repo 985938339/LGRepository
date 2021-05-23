@@ -33,7 +33,7 @@ public interface OmsOrderService extends IService<OmsOrder> {
     /**
      * 详情
      *
-     * @param id
+     * @param orderSn
      * @return
      */
     OmsOrder info(String orderSn);
@@ -70,9 +70,9 @@ public interface OmsOrderService extends IService<OmsOrder> {
      */
     void removes(List<Long> ids);
 
-    ConfirmVo confirm(List<cartVo> list) throws StockException;
+    ConfirmVo confirm(List<cartVo> list);
 
-    void submit(SubmitVo submitVo) throws Exception;
+    void submit(SubmitVo submitVo);
 
     void closeOrder(OmsOrder order);
 

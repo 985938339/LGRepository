@@ -33,7 +33,6 @@ public class UmsMemberServiceImpl extends ServiceImpl<UmsMemberMapper, UmsMember
     /**
      * 会员分页列表
      *
-     * @param param 根据需要进行传值
      * @return
      */
     @Override
@@ -75,7 +74,7 @@ public class UmsMemberServiceImpl extends ServiceImpl<UmsMemberMapper, UmsMember
     }
 
     @Override
-    public String login(UmsMember umsMember) throws Exception {
+    public String login(UmsMember umsMember)  {
         UmsMember member = baseMapper.selectOne(new QueryWrapper<UmsMember>()
                 .eq("username", umsMember.getUsername()));
         if (ObjectUtils.isEmpty(member)) {
@@ -86,7 +85,7 @@ public class UmsMemberServiceImpl extends ServiceImpl<UmsMemberMapper, UmsMember
         if (!matches) {
             throw new ApiException("密码错误");
         }
-        //使用jwt生成令牌，放到session中给客户端携带使用
+        //使用jwt生成令牌，返回给客户端携带使用
         String token = JwtUtils.GetMemberToken(member.getId().toString(), member.getUsername());
         return token;
     }

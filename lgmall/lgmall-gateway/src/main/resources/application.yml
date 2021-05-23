@@ -17,6 +17,23 @@ spring:
 
     gateway:
       routes:
+#        - id: product_route
+#          uri: lb://lgmall-product
+#          predicates:
+#            - Path=/api/product/**  #匹配对应的路径，并且会将匹配到的路径添加到uri的后面
+#            - Query=id              #请求的参数中包含一个叫id的参数
+#            - Query=id,5            #请求的参数中包含一个叫id的参数且id的值为5
+#            - Method=Post           #请求方法的类型为Post请求
+#            - After=2021-05-01T12:00:00.000+08:00[Asia/Shanghai] #匹配所有请求的时间在2021年5月1日12点后的请求
+#            - RemoteAddr=192.168.56.1/0    #匹配所有远程请求地址是192.168.56.1，子网掩码是0的请求
+#            - Header=id,\d+         #匹配所有header中包含id为数字的请求，\d+是一个正则表达式，表示任意数字
+#          filters:
+#            - RewritePath=/api/(?<segment>/?.*),/$\{segment} #将前面一段路径重写为后面一段路径，这里的意思是把原路径中的/api给去掉
+#            - PrefixPath=/product   #将/product加在请求路径的前面
+#            - StripPrefix=2         #去掉前面2个/和它后面的路径，如/A/B/C，就会变成/C
+#            - SetPath=/product/{segment}   #设置路径，这里再前面需要加一个-Path=api/product/{segment}，这样segment会存储到一个map中，设置路径是就能或者到
+#            - AddRequestParameter=id,1     #给请求添加参数id=1
+#            - SetStatus=404         #返回页面状态码status code为404，即使它是一个正常的请求
 
           #所以访问 lgmall.com的时候，就会路由到产品服务去
         - id: lgmall_host_route
@@ -44,13 +61,3 @@ spring:
           predicates:
             - Host=order.lgmall.com
 
-
-
-
-
-#暴露所有端点
-management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'

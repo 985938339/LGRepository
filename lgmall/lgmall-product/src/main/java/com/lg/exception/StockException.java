@@ -1,6 +1,6 @@
 package com.lg.exception;
 
-public class StockException extends Exception {
+public class StockException extends RuntimeException {
 
 
     public StockException(String message) {

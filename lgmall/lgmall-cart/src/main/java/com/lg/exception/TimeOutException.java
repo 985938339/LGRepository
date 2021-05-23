@@ -1,6 +1,6 @@
 package com.lg.exception;
 
-public class TimeOutException extends Exception {
+public class TimeOutException extends RuntimeException {
 
 
     public TimeOutException(String message) {

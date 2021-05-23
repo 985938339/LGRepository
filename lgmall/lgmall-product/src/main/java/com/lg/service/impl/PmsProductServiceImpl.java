@@ -113,8 +113,9 @@ public class PmsProductServiceImpl extends ServiceImpl<PmsProductMapper, PmsProd
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void LockStock(LockStockVo lockStockVo) throws StockException {
+    public void LockStock(LockStockVo lockStockVo) {
         for (StockItemVo stockItemVo : lockStockVo.getStockItemVoList()) {
+            //todo 在这里还要对锁库存做一个记录，用唯一索引来保证该接口的幂等性
             if (this.baseMapper.lockStock(stockItemVo.getProductId(), stockItemVo.getCount()) != 1) {
                 throw new StockException("库存不足");
             }

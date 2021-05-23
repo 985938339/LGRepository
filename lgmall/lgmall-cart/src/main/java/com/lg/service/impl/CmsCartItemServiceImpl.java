@@ -10,6 +10,7 @@ import com.lg.redisQueue.RedisQueueService;
 import com.lg.interceptor.LoginInterceptor;
 import com.lg.service.CmsCartItemService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lg.utils.MemberInfoUtil;
 import com.lg.utils.PageUtils;
 import com.lg.vo.ProductVo;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -37,7 +38,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
     private ProductFeign productFeign;
 
     private String getKey() {
-        return "cms:cart:" + LoginInterceptor.getMemberId();
+        return "cms:cart:" + MemberInfoUtil.getCurrentMemberId();
     }
 
     /**
@@ -52,7 +53,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
         IPage<CmsCartItem> result = new Page<>();
         Map map = redisTemplate.opsForHash().entries(getKey());
         //查询缓存为空
-        if (map.size()==0) {
+        if (map.size() == 0) {
             String key = getKey();
             //在队列里面查询
             result = redisQueueService.query(key, 1000, (key2) -> {
@@ -65,7 +66,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
                 }
                 //查询数据库中的购物车信息
                 QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("member_id", LoginInterceptor.getMemberId());
+                queryWrapper.eq("member_id", MemberInfoUtil.getCurrentMemberId());
                 page = page(PageUtils.getPage(pageNum, limit), queryWrapper);
                 //把购物车信息存入redis中
                 map2 = new HashMap<>();
@@ -76,7 +77,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
                 return page;
             });
         } else {
-            List<CmsCartItem> list = new ArrayList<>(map.values()).subList(pageNum * limit,limit>map.size()? map.size():(pageNum + 1) * limit);
+            List<CmsCartItem> list = new ArrayList<>(map.values()).subList(pageNum * limit, limit > map.size() ? map.size() : (pageNum + 1) * limit);
             result.setRecords(list);
         }
         return result;
@@ -98,7 +99,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
                 }
                 //查询数据库中的购物车信息
                 QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("member_id", LoginInterceptor.getMemberId());
+                queryWrapper.eq("member_id", MemberInfoUtil.getCurrentMemberId());
                 List<CmsCartItem> list = this.baseMapper.selectList(queryWrapper);
                 //把查到的购物车信息存入redis中
                 map2 = new HashMap<>();
@@ -136,7 +137,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
                 }
                 //查询数据库中的购物车信息
                 QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("id", id).eq("member_id", LoginInterceptor.getMemberId());
+                queryWrapper.eq("id", id).eq("member_id", MemberInfoUtil.getCurrentMemberId());
                 cartItem1 = this.baseMapper.selectOne(queryWrapper);
                 //把查到的购物车信息存入redis中
                 redisTemplate.opsForHash().put(key2, id, cartItem1);
@@ -162,7 +163,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
         List<CmsCartItem> itemList = new ArrayList<>(list.size());
         for (ProductVo p : list) {
             CmsCartItem cartItem = new CmsCartItem();
-            cartItem.setMemberId(LoginInterceptor.getMemberId());
+            cartItem.setMemberId(Long.parseLong(MemberInfoUtil.getCurrentMemberId()));
             cartItem.setCreateTime(new Date());
             cartItem.setUpdateTime(new Date());
             cartItem.setProductId(p.getId());

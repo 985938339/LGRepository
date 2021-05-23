@@ -20,7 +20,7 @@ public class MybatisGenerite {
         // 1、全局配置
         GlobalConfig gc = new GlobalConfig();
         String projectPath = System.getProperty("user.dir");// 当前项目的路径
-        gc.setOutputDir(projectPath + "/lgmall-product/src/main/java");// 生成文件输出根目录
+        gc.setOutputDir(projectPath + "/lgmall-order/src/main/java");// 生成文件输出根目录
         gc.setAuthor("liuguo");// 作者
         gc.setOpen(false); // 生成完成后不弹出文件框
         gc.setFileOverride(true); // 文件是否覆盖
@@ -43,7 +43,7 @@ public class MybatisGenerite {
         //2、设置数据源
         DataSourceConfig dsc = new DataSourceConfig();
         dsc.setDbType(DbType.MYSQL);
-        dsc.setUrl("jdbc:mysql://192.168.56.10:3306/lgmall_pms?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai");
+        dsc.setUrl("jdbc:mysql://192.168.56.10:3306/lgmall_oms?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai");
         dsc.setDriverName("com.mysql.cj.jdbc.Driver");
         dsc.setUsername("root");
         dsc.setPassword("root");
@@ -63,7 +63,7 @@ public class MybatisGenerite {
 
         //4、策略配置
         StrategyConfig strategy = new StrategyConfig();
-        strategy.setInclude("stock_release_record"); // 逆向工程使用的表   如果要生成多个,这里可以传入String[]
+        strategy.setInclude("mq_message"); // 逆向工程使用的表   如果要生成多个,这里可以传入String[]
         strategy.setNaming(NamingStrategy.underline_to_camel);// 表名生成策略
         strategy.setColumnNaming(NamingStrategy.underline_to_camel);
         strategy.setEntityLombokModel(true); // 自动lombok；

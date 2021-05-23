@@ -11,7 +11,7 @@ import java.util.concurrent.locks.Lock;
  *
  * @author liug132055
  */
-@Service
+@Service("redisQueueService2")
 public class RedisQueueService {
 
     /**

@@ -3,7 +3,6 @@ package com.lg.service;
 import com.lg.entity.PmsProduct;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.lg.exception.StockException;
 import com.lg.vo.LockStockVo;
 
 import java.util.List;
@@ -67,7 +66,7 @@ public interface PmsProductService extends IService<PmsProduct> {
      */
     void removes(List<Long> ids);
 
-    void LockStock(LockStockVo lockStockVo) throws StockException;
+    void LockStock(LockStockVo lockStockVo);
 
     void releaseStock(LockStockVo lockStockVo);
 }

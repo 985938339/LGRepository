@@ -16,6 +16,7 @@ import com.lg.interceptor.LoginInterceptor;
 import com.lg.service.OmsOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lg.service.OrderProductService;
+import com.lg.utils.MemberInfoUtil;
 import com.lg.vo.*;
 import com.lg.utils.PageUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -133,7 +134,7 @@ public class OmsOrderServiceImpl extends ServiceImpl<OmsOrderMapper, OmsOrder> i
      * @return
      */
     @Override
-    public ConfirmVo confirm(List<cartVo> list) throws StockException {
+    public ConfirmVo confirm(List<cartVo> list) {
         ConfirmVo confirmVo = new ConfirmVo();
         List<Long> list1 = new ArrayList<>(list.size());
         for (cartVo cartVo : list) {
@@ -149,7 +150,7 @@ public class OmsOrderServiceImpl extends ServiceImpl<OmsOrderMapper, OmsOrder> i
         }
         confirmVo.setList(productVos);
         //todo 设置当前下单的token，防止重复提交,（或者还有一种是订单号就在这生成，利用数据库的订单id不可重复来实现幂等性）
-        String token = LoginInterceptor.getMemberId().toString() + System.currentTimeMillis();
+        String token = MemberInfoUtil.getCurrentMemberId() + System.currentTimeMillis();
         confirmVo.setToken(token);
         //放入redis，下单时在里面拿到和删除
         redisTemplate.opsForValue().set("oms:orderToken", token, 10, TimeUnit.MINUTES);
@@ -158,7 +159,7 @@ public class OmsOrderServiceImpl extends ServiceImpl<OmsOrderMapper, OmsOrder> i
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void submit(SubmitVo submitVo) throws Exception {
+    public void submit(SubmitVo submitVo) {
         List<ProductVo> productVoList = submitVo.getProductVoList();
         //todo 提交的幂等性,使用lua脚本原子执行，防止并发问题
         String script = "if redis.call('get',KEYS[1]) == ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end";
@@ -206,7 +207,7 @@ public class OmsOrderServiceImpl extends ServiceImpl<OmsOrderMapper, OmsOrder> i
         }
     }
 
-    private BigDecimal verifyPrice(List<Long> productIds, List<ProductVo> productVoList) throws Exception {
+    private BigDecimal verifyPrice(List<Long> productIds, List<ProductVo> productVoList) {
         BigDecimal totalPrice = BigDecimal.ZERO;
         //远程查询当前最新产品信息
         List<ProductVo> wareList = productFeign.get(productIds).getData();
@@ -235,7 +236,7 @@ public class OmsOrderServiceImpl extends ServiceImpl<OmsOrderMapper, OmsOrder> i
 
     private OmsOrder saveOrder(String orderSn, BigDecimal totalPrice, List<ProductVo> productVoList) {
         //获取登录用户id
-        Long memberId = LoginInterceptor.getMemberId();
+        Long memberId = Long.parseLong(MemberInfoUtil.getCurrentMemberId());
         OmsOrder order = new OmsOrder();
         order.setMemberId(memberId);
         order.setState(0);

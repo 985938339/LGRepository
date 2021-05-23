@@ -1,6 +1,6 @@
 package com.lg.exception;
 
-public class SubmitException extends Exception {
+public class SubmitException extends RuntimeException {
 
 
     public SubmitException(String message) {

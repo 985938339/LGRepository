@@ -63,5 +63,5 @@ public interface UmsMemberService extends IService<UmsMember> {
      */
     void removes(List<Long> ids);
 
-    String login(UmsMember umsMember) throws Exception;
+    String login(UmsMember umsMember);
 }

@@ -1,8 +1,7 @@
 package com.lg.exception;
 
-import com.baomidou.mybatisplus.extension.api.IErrorCode;
 
-public class ApiException extends Exception {
+public class ApiException extends RuntimeException {
 
 
     public ApiException(String message) {

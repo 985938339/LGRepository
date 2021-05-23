@@ -38,14 +38,14 @@ public class OmsOrderController {
 
     @ApiOperation(value = "生成确认信息")
     @PostMapping("/confirm")
-    public R<ConfirmVo> confirm(@RequestBody List<cartVo> list) throws StockException {
+    public R<ConfirmVo> confirm(@RequestBody List<cartVo> list){
         ConfirmVo confirmVo = omsOrderService.confirm(list);
         return R.ok(confirmVo);
     }
 
     @ApiOperation(value = "提交订单")
     @PostMapping("/submit")
-    public R<String> submit(@RequestBody SubmitVo submitVo) throws Exception {
+    public R<String> submit(@RequestBody SubmitVo submitVo){
         omsOrderService.submit(submitVo);
         return R.ok("新增成功");
     }
