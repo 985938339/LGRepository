@@ -51,69 +51,64 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
     @Override
     public IPage<CmsCartItem> page(Integer pageNum, Integer limit) throws Throwable {
         IPage<CmsCartItem> result = new Page<>();
-        Map map = redisTemplate.opsForHash().entries(getKey());
         //查询缓存为空
-        if (map.size() == 0) {
-            String key = getKey();
-            //在队列里面查询
-            result = redisQueueService.query(key, 1000, (key2) -> {
-                Page<CmsCartItem> page = new Page<>();
-                //二次检查redis是否有值，查询到就直接返回结果
-                Map<String, CmsCartItem> map2 = redisTemplate.opsForValue().get(getKey());
-                if (map2 != null) {
-                    page.setRecords(new ArrayList<>(map2.values()));
-                    return page;
-                }
-                //查询数据库中的购物车信息
-                QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("member_id", MemberInfoUtil.getCurrentMemberId());
-                page = page(PageUtils.getPage(pageNum, limit), queryWrapper);
-                //把购物车信息存入redis中
-                map2 = new HashMap<>();
-                for (CmsCartItem cartItem : page.getRecords()) {
-                    map2.put(cartItem.getId().toString(), cartItem);
-                }
-                redisTemplate.opsForHash().putAll(key2, map2);
-                return page;
-            });
-        } else {
+        String key = getKey();
+        //在队列里面查询
+        result = redisQueueService.query(key, 2000, key1 -> {
+            IPage<CmsCartItem> page1 = new Page<>();
+            Map map = redisTemplate.opsForHash().entries(getKey());
             List<CmsCartItem> list = new ArrayList<>(map.values()).subList(pageNum * limit, limit > map.size() ? map.size() : (pageNum + 1) * limit);
-            result.setRecords(list);
-        }
+            page1.setRecords(list);
+            return page1;
+        }, (key2) -> {
+            Page<CmsCartItem> page = new Page<>();
+            //二次检查redis是否有值，查询到就直接返回结果
+            Map<String, CmsCartItem> map2 = redisTemplate.opsForValue().get(getKey());
+            if (map2 != null) {
+                page.setRecords(new ArrayList<>(map2.values()));
+                return page;
+            }
+            //查询数据库中的购物车信息
+            QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("member_id", MemberInfoUtil.getCurrentMemberId());
+            page = page(PageUtils.getPage(pageNum, limit), queryWrapper);
+            //把购物车信息存入redis中
+            map2 = new HashMap<>();
+            for (CmsCartItem cartItem : page.getRecords()) {
+                map2.put(cartItem.getId().toString(), cartItem);
+            }
+            redisTemplate.opsForHash().putAll(key2, map2);
+            return page;
+        });
         return result;
     }
 
     @Override
     public List<CmsCartItem> itemList() throws Throwable {
         List<CmsCartItem> result = null;
-        Map<String, CmsCartItem> map = redisTemplate.opsForValue().get(getKey());
-        //查询缓存为null
-        if (map == null) {
-            String key = getKey();
-            //在队列里面查询
-            result = redisQueueService.query(key, 1000, (key2) -> {
-                //二次检查redis是否有值，查询到就直接返回结果
-                Map<String, CmsCartItem> map2 = redisTemplate.opsForValue().get(getKey());
-                if (map2 != null) {
-                    return new ArrayList<>(map2.values());
-                }
-                //查询数据库中的购物车信息
-                QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("member_id", MemberInfoUtil.getCurrentMemberId());
-                List<CmsCartItem> list = this.baseMapper.selectList(queryWrapper);
-                //把查到的购物车信息存入redis中
-                map2 = new HashMap<>();
-                for (CmsCartItem cartItem : list) {
-                    map2.put(cartItem.getId().toString(), cartItem);
-                }
-                redisTemplate.opsForHash().putAll(key2, map2);
-                //返回结果
-                return list;
-            });
-        } else {
-            //查询缓存不为null
-            result = new LinkedList<>(map.values());
-        }
+        String key = getKey();
+        result = redisQueueService.query(key, 2000, key1 -> {
+            Map<String, CmsCartItem> map = redisTemplate.opsForValue().get(getKey());
+            return new ArrayList<>(new LinkedList<>(map.values()));
+        }, (key2) -> {
+            //二次检查redis是否有值，查询到就直接返回结果
+            Map<String, CmsCartItem> map2 = redisTemplate.opsForValue().get(getKey());
+            if (map2 != null) {
+                return new ArrayList<>(map2.values());
+            }
+            //查询数据库中的购物车信息
+            QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("member_id", MemberInfoUtil.getCurrentMemberId());
+            List<CmsCartItem> list = this.baseMapper.selectList(queryWrapper);
+            //把查到的购物车信息存入redis中
+            map2 = new HashMap<>();
+            for (CmsCartItem cartItem : list) {
+                map2.put(cartItem.getId().toString(), cartItem);
+            }
+            redisTemplate.opsForHash().putAll(key2, map2);
+            //返回结果
+            return list;
+        });
         return result;
 
     }
@@ -127,24 +122,23 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
     @Override
     public CmsCartItem info(Long id) throws Throwable {
         CmsCartItem result = null;
-        result = (CmsCartItem) redisTemplate.opsForHash().get(getKey(), id);
-        if (result == null) {
-            result = redisQueueService.query(getKey(), 1000, (key2) -> {
-                //二次检查redis是否有值，查询到就直接返回结果
-                CmsCartItem cartItem1 = (CmsCartItem) redisTemplate.opsForHash().get(key2, id);
-                if (cartItem1 != null) {
-                    return cartItem1;
-                }
-                //查询数据库中的购物车信息
-                QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("id", id).eq("member_id", MemberInfoUtil.getCurrentMemberId());
-                cartItem1 = this.baseMapper.selectOne(queryWrapper);
-                //把查到的购物车信息存入redis中
-                redisTemplate.opsForHash().put(key2, id, cartItem1);
-                //返回结果
+        result = redisQueueService.query(getKey(), 2000, key1 -> {
+            return (CmsCartItem) redisTemplate.opsForHash().get(getKey(), id);
+        }, (key2) -> {
+            //二次检查redis是否有值，查询到就直接返回结果
+            CmsCartItem cartItem1 = (CmsCartItem) redisTemplate.opsForHash().get(key2, id);
+            if (cartItem1 != null) {
                 return cartItem1;
-            });
-        }
+            }
+            //查询数据库中的购物车信息
+            QueryWrapper<CmsCartItem> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("id", id).eq("member_id", MemberInfoUtil.getCurrentMemberId());
+            cartItem1 = this.baseMapper.selectOne(queryWrapper);
+            //把查到的购物车信息存入redis中
+            redisTemplate.opsForHash().put(key2, id, cartItem1);
+            //返回结果
+            return cartItem1;
+        });
         return result;
     }
 
@@ -176,11 +170,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
             //更新数据库
             saveBatch(value);
             //更新redis
-            Map<String, CmsCartItem> map = new HashMap<>(value.size());
-            for (CmsCartItem item : value) {
-                map.put(item.getId().toString(), item);
-            }
-            redisTemplate.opsForHash().putAll(key, map);
+            redisTemplate.opsForHash().delete(key);
         });
     }
 
@@ -197,7 +187,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
             //更新数据库
             updateById(cartItem);
             //更新redis
-            redisTemplate.opsForHash().put(key, value.getId(), value);
+            redisTemplate.opsForHash().delete(key);
         });
     }
 
@@ -213,7 +203,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
             //更新数据库
             removeById(id);
             //更新redis
-            redisTemplate.opsForHash().delete(key, id);
+            redisTemplate.opsForHash().delete(key);
         });
     }
 
@@ -229,7 +219,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
             //更新数据库
             removeByIds(ids);
             //更新redis
-            redisTemplate.opsForHash().delete(key, ids);
+            redisTemplate.opsForHash().delete(key);
         });
     }
 
@@ -241,7 +231,7 @@ public class CmsCartItemServiceImpl extends ServiceImpl<CmsCartItemMapper, CmsCa
             wrapper.in("product_id", value);
             this.baseMapper.delete(wrapper);
             //更新redis
-            redisTemplate.opsForHash().delete(key, productIds.toArray().toString());
+            redisTemplate.opsForHash().delete(key);
         });
     }
 }

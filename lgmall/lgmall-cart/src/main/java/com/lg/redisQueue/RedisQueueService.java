@@ -22,15 +22,19 @@ public class RedisQueueService {
     TransactionDefinition definition;
 
     /**
-     * 先从redis缓存获取，获取不到，再执行该方法
+     * 先从redis缓存获取，获取不到，再入队列查数据库
      *
-     * @param key           要查询的key
-     * @param timeout       超时时间，以毫秒为单位
-     * @param queryFunction 定义查询操作
+     * @param key                要查询的key
+     * @param timeout            超时时间，以毫秒为单位
+     * @param queryCacheFunction 定义查询操作
      * @return
      */
-    public <T> T query(String key, long timeout, QueryFunction<T> queryFunction) throws Throwable {
-        Request<T> request = new QueryRequest<>(key, queryFunction);
+    public <T> T query(String key, long timeout, QueryFunction<T> queryCacheFunction, QueryFunction<T> queryDataBaseFunction) throws Exception {
+        T result = queryCacheFunction.queryExecution(key);
+        if (result != null) {
+            return result;
+        }
+        Request<T> request = new QueryRequest<>(key, queryDataBaseFunction);
         request = QueueManager.getInstance().dispatch(request);
         try {
             long deadline = TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) + timeout;
@@ -45,8 +49,8 @@ public class RedisQueueService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if (request.getRequestThrowable() != null) {
-            throw request.getRequestThrowable();
+        if (request.getRequestException() != null) {
+            throw request.getRequestException();
         }
         return request.getResult();
     }
@@ -90,8 +94,8 @@ public class RedisQueueService {
             e.printStackTrace();
         }
         //在发生异常以及更新超时的时候需要给controller抛出异常
-        if (request.getRequestThrowable() != null || !request.isDone()) {
-            throw request.isDone() ? request.getRequestThrowable() : new TimeOutException("更新超时");
+        if (request.getRequestException() != null || !request.isDone()) {
+            throw request.isDone() ? request.getRequestException() : new TimeOutException("更新超时");
         }
     }
 }

@@ -19,14 +19,12 @@ public class QueryRequest<T> extends Request<T> {
                 result = queryFunction.queryExecution(key);
             }
         } catch (Exception e) {
-            this.requestThrowable =e;
+            this.requestException = e;
         } finally {
             synchronized (this) {
-                isDone=true;
+                isDone = true;
                 this.notifyAll();
             }
         }
     }
-
-
 }

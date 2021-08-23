@@ -6,7 +6,7 @@ package com.lg.redisQueue;
 public abstract class Request<T> {
     String key;
     T result;
-    Throwable requestThrowable;
+    Exception requestException;
     /**
      * 判断请求是否完成
      */
@@ -29,7 +29,7 @@ public abstract class Request<T> {
         return result;
     }
 
-    public Throwable getRequestThrowable() {
-        return requestThrowable;
+    public Exception getRequestException() {
+        return requestException;
     }
 }

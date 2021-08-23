@@ -20,7 +20,7 @@ public class UpdateRequest<T> extends Request<T> {
                 updateFunction.updateExecution(key, value);
             }
         } catch (Exception e) {
-            this.requestThrowable =e;
+            this.requestException =e;
         } finally {
             synchronized (this) {
                 isDone=true;
